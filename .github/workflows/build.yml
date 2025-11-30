@@ -1,0 +1,54 @@
+# Self-hosted
+# name: Build on new kernel
+# on:
+#  schedule: [{cron: '0 */3 * * *'}]
+#  workflow_dispatch:
+#jobs:
+#  build:
+#    runs-on: [self-hosted, aarch64]
+#    steps:
+#      - uses: actions/checkout@v4
+#      - run: ./build.sh
+#      - run: rsync -avz repo/ user@yourserver:/var/www/html/rocky10-rpi-mmc/
+
+# Hosted with gh pages
+name: Build + Deploy RPi MMC modules
+
+on:
+  workflow_dispatch:  # manual trigger
+  schedule:
+    - cron: '0 3 * * *' # daily at 03:00 UTC (adjust if you want faster)
+
+jobs:
+  build-and-deploy:
+    runs-on: [self-hosted, aarch64] # your own aarch64 runner (RPi 5, Hetzner ARM, etc.)
+    permissions:
+      contents: write # needed for gh-pages push
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: sudo dnf install -y rpm-build mock createrepo_c curl patch
+
+      - name: Determine latest kernel version
+        id: kernel
+        run: |
+          VER=$(rpm -q --qf '%{version}-%{release}' kernel-core || echo "6.12.0-0.el10")
+          echo "kernel_version=$VER" >> $GITHUB_OUTPUT
+
+      - name: Build MMC modules RPMs
+        env:
+          KERNEL_VERSION: ${{ steps.kernel.outputs.kernel_version }}
+        run: |
+          ./build.sh $KERNEL_VERSION
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./repo
+          force_orphan: true # keeps gh-pages branch tiny
+          keep_files: false
+          enable_jekyll: false
