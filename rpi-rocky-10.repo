@@ -1,0 +1,6 @@
+[rpi-rocky-10]
+name=Raspberry Pi drivers for vanilla Rocky 10
+baseurl=https://p4nda.github.io/rocky-10-rpi-builder
+enabled=1
+gpgcheck=0               #TODO: set to 1 + gpgkey= after signing repomd.xml
+priority=10
