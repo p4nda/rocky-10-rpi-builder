@@ -1,0 +1,22 @@
+--- a/kernel.spec
++++ b/kernel.spec
+@@
+ %define buildmmc 1
++
++%package rpi-mmc-modules
++Summary: RPi MMC drivers for vanilla kernel
++Requires: kernel-modules = %{version}-%{release}
++
++%description rpi-mmc-modules
++Extra MMC modules (mmc_block, sdhci_iproc) for Raspberry Pi on Rocky 10.
++
++%package rpi-mmc-modules-core
++Summary: Core RPi MMC modules
++Requires: kernel-rpi-mmc-modules = %{version}-%{release}
++
++%description rpi-mmc-modules-core
++Core subset.
+@@
+ %if %{buildmmc}
+ make ARCH=%{karch} CONFIG_MMC_BLOCK=m CONFIG_MMC_SDHCI_IPROC=m modules
+ %endif
